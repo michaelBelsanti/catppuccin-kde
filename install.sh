@@ -2,11 +2,13 @@
 
 # Syntax <Flavour = 1-4 > <Accent = 1-14> <WindowDec = 1/2> <Debug = global/color/splash/cursor>
 
-COLORDIR=~/.local/share/color-schemes
-AURORAEDIR=~/.local/share/aurorae/themes
-LOOKANDFEELDIR=~/.local/share/plasma/look-and-feel
-DESKTOPTHEMEDIR=~/.local/share/plasma/desktoptheme
-CURSORDIR=~/.local/share/icons
+COLORDIR=$out/share/color-schemes
+AURORAEDIR=$out/share/aurorae/themes
+LOOKANDFEELDIR=$out/share/plasma/look-and-feel
+DESKTOPTHEMEDIR=$out/share/plasma/desktoptheme
+CURSORDIR=$out/share/icons
+
+CONFIRMATION="y"
 
 echo "Creating theme directories.."
 mkdir -p $COLORDIR
@@ -23,7 +25,6 @@ WINDECSTYLE="$3"
 
 DEBUGMODE="$4"
 
-clear
 
 if [[ "$1" == "" ]]; then
     echo ""
@@ -34,8 +35,6 @@ if [[ "$1" == "" ]]; then
     4. Latte
     (Type the number corresponding to said pallet)
     "
-    read -r FLAVOUR
-    clear
 fi
 
 if [[ $FLAVOUR == "1" ]]; then
@@ -71,8 +70,6 @@ if [[ "$2" == "" ]]; then
     13. Blue
     14. Lavender
     "
-    read -r ACCENT
-    clear
 fi
 
 # Sets accent based on the pallet selected (Best to fold this in your respective editor)
@@ -255,8 +252,6 @@ if [[ "$3" == "" ]]; then
     1. Modern (Mixed)
     2. Classic (MacOS like)
     "
-    read -r WINDECSTYLE
-    clear
 fi
 
 if [[ $WINDECSTYLE == "1" ]]; then
@@ -266,7 +261,6 @@ if [[ $WINDECSTYLE == "1" ]]; then
  1: Use 3 icons on the right, With the 'Close' Button on the Far-Right
  2: If you would like the pin on all desktops button, You need to place it on the left."
     echo "We apologize if you wanted a different configuration :("
-    sleep 2
 elif [[ $WINDECSTYLE == "2" ]]; then
     WINDECSTYLENAME=Classic
     WINDECSTYLECODE=__aurorae__svg__Catppuccin"$FLAVOURNAME"-Classic
@@ -355,7 +349,7 @@ function InstallGlobalTheme {
     mkdir -p ./dist/"$GLOBALTHEMENAME"/contents/splash/images
 
     # Hydrate Metadata with Pallet + Accent Info
-    sed -e s/--accentName/"$ACCENTNAME"/g -e s/--flavour/"$FLAVOURNAME"/g ./Resources/LookAndFeel/metadata.desktop > ./dist/Catppuccin-"$FLAVOURNAME"-"$ACCENTNAME/metada"ta.desktop
+    sed -e s/--accentName/"$ACCENTNAME"/g -e s/--flavour/"$FLAVOURNAME"/g ./Resources/LookAndFeel/metadata.desktop > ./dist/Catppuccin-"$FLAVOURNAME"-"$ACCENTNAME"/metadata.desktop
 
     # Modify 'defaults' to set the correct Aurorae Theme
     sed -e s/--accentName/"$ACCENTNAME"/g -e s/--flavour/"$FLAVOURNAME"/g -e s/--aurorae/"$WINDECSTYLECODE"/g ./Resources/LookAndFeel/defaults > ./dist/Catppuccin-"$FLAVOURNAME"-"$ACCENTNAME"/contents/defaults
@@ -371,14 +365,13 @@ function InstallGlobalTheme {
     echo "
  WARNING: There might be some errors that might not affect the installer at all during this step, Please advise.
     "
-    sleep 1
     echo "Installing Global Theme.."
-    cd ./dist && tar -cf "$GLOBALTHEMENAME".tar.gz "$GLOBALTHEMENAME"
-    kpackagetool5 -i "$GLOBALTHEMENAME".tar.gz
-    cd ..
+    # cd ./dist && tar -cf "$GLOBALTHEMENAME".tar.gz "$GLOBALTHEMENAME"
+    # kpackagetool5 -i "$GLOBALTHEMENAME".tar.gz
+    # cd ..
+    cp -r ./dist/$GLOBALTHEMENAME $LOOKANDFEELDIR
 
     if [[ ! -d "$DESKTOPTHEMEDIR/lightly-plasma-git/" ]]; then
-        clear
         echo ""
         echo "Installation failed, could not fetch the lightly plasma theme lightly-plasma-git from store.kde.org"
         echo "Here are some things you can do to try fixing this:"
@@ -388,7 +381,6 @@ function InstallGlobalTheme {
         echo " 4: Manually installing Lightly-Plasma from https://pling.com/p/1879921/"
         echo ""
         echo "Would you like to install Catppuccin/KDE without lightly plasma? [y/n]:"
-        read -r CONFIRMATION
         if [[ $CONFIRMATION == "N" ]] || [[ $CONFIRMATION == "n" ]]; then
             echo ""
             echo "Exiting..." && exit
@@ -415,7 +407,6 @@ function InstallColorscheme {
 function GetCursor {
     # Fetches cursors
     echo "Downloading Catppuccin Cursors from Catppuccin/cursors..."
-    sleep 1.5
     wget -P ./dist https://github.com/catppuccin/cursors/releases/download/v0.2.0/Catppuccin-"$FLAVOURNAME"-"$ACCENTNAME"-Cursors.zip
     wget -P ./dist https://github.com/catppuccin/cursors/releases/download/v0.2.0/Catppuccin-"$FLAVOURNAME"-Dark-Cursors.zip
     cd ./dist && unzip Catppuccin-"$FLAVOURNAME"-"$ACCENTNAME"-Cursors.zip
@@ -433,8 +424,6 @@ function InstallCursor {
 if [[ $DEBUGMODE == "" ]]; then
     echo ""
     echo "Install $FLAVOURNAME $ACCENTNAME? with the $WINDECSTYLENAME window Decorations? [y/n]:"
-    read -r CONFIRMATION
-    clear
 elif [[ $DEBUGMODE == "global" ]]; then
     InstallGlobalTheme
     exit
@@ -466,9 +455,6 @@ if [[ $CONFIRMATION == "Y" ]] || [[ $CONFIRMATION == "y" ]]; then
     echo "Installing aurorae theme.."
     AuroraeInstall
 
-    echo "Installing Catppuccin Cursor theme.."
-    InstallCursor
-
     # Cleanup
     echo "Cleaning up.."
     rm -rf ./dist
@@ -476,11 +462,8 @@ if [[ $CONFIRMATION == "Y" ]] || [[ $CONFIRMATION == "y" ]]; then
     # Apply theme
     echo ""
     echo "Do you want to apply theme? [y/n]:"
-    read -r CONFIRMATION
 
     if [[ $CONFIRMATION == "Y" ]] || [[ $CONFIRMATION == "y" ]]; then
-        lookandfeeltool -a "$GLOBALTHEMENAME"
-        clear
         echo "The cursors will fully apply once you log out"
 
         # Some legacy apps still look in ~/.icons
@@ -488,7 +471,6 @@ if [[ $CONFIRMATION == "Y" ]] || [[ $CONFIRMATION == "y" ]]; then
         echo "ln -s ~/.local/share/icons/ ~/.icons"
     else
         echo "You can apply theme at any time using system settings"
-        sleep 0.5
     fi
 else echo "Exiting.." && exit
 fi
